@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<body>
+<input type='color' name='color0'/>
+<input type='color' name='color1'/>
+<style>input{width: 100%;height: 30vh;}</style>
+<script>
+  const nodes = [...document.querySelectorAll('input')];
+  const query = (name, value='') => {
+    fetch(`/${name}/${value.substr(1)}`)
+      .then(res=>res.json())
+      .then(data => {
+        data.colors.forEach((color, index) => {
+          nodes[index].value = '#' + ('000000' + color.toString(16)).substr(-6);
+        });
+      });    
+  };
+  nodes.forEach(node => {
+    node.addEventListener('change', ({target}) => {
+      query(target.name, target.value);
+    });
+  });
+  query('initial');
+</script>
+</body>
+</html>
