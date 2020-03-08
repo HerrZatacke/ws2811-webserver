@@ -41,10 +41,22 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
+  bool connoctAni = false;
+  
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    delay(250);
     Serial.print(F("."));
+    
+    pixels.setPixelColor(0, connoctAni ? 0xff0000 : 0);
+    pixels.setPixelColor(1, connoctAni ? 0 : 0xff0000);
+    pixels.show();
+    connoctAni = !connoctAni;
   }
+
+  pixels.setPixelColor(0, 0);
+  pixels.setPixelColor(1, 0);
+  pixels.show();
+
   Serial.println();
   Serial.println(F("WiFi connected"));
 
