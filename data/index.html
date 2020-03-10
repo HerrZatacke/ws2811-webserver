@@ -1,26 +1,57 @@
 <!doctype html>
-<html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>ws2811 control</title>
+  <style>
+    input {
+      width: 100%;
+      height: 30vh;
+      border: none;
+    }
+    * {
+      margin: 0; 
+      padding: 0;
+    }
+  </style>
+</head>
 <body>
-<input type='color' name='color0'/>
-<input type='color' name='color1'/>
-<style>input{width: 100%;height: 30vh;}</style>
-<script>
-  const nodes = [...document.querySelectorAll('input')];
-  const query = (name, value='') => {
-    fetch(`/${name}/${value.substr(1)}`)
-      .then(res=>res.json())
-      .then(data => {
-        data.colors.forEach((color, index) => {
-          nodes[index].value = '#' + ('000000' + color.toString(16)).substr(-6);
+  <script>
+    let nodes = null;
+    
+    const toColor = number => ('#' + ('000000' + number.toString(16)).substr(-6));
+
+    const query = (name, value='') => {
+      return fetch(`/${name}/${value.substr(1)}`)
+        .then(res=>res.json())
+        .then(data => {
+          if (nodes) {
+            data.colors.forEach((color, index) => {
+              nodes[index].value = toColor(color);
+            });
+          } else {
+            return data.colors;
+          }
+        });    
+    };
+
+    query('initial')
+      .then(colors => {
+        const body = document.querySelector('body');
+        nodes = colors.map((color, index) => {
+          const node = document.createElement('input');
+          node.type = 'color';
+          node.name = `color${index}`;
+          node.value = toColor(color);
+          node.addEventListener('change', ({target}) => {
+            query(target.name, target.value);
+          });          
+          body.appendChild(node);
+          return node;
         });
-      });    
-  };
-  nodes.forEach(node => {
-    node.addEventListener('change', ({target}) => {
-      query(target.name, target.value);
-    });
-  });
-  query('initial');
-</script>
+      });
+  </script>
 </body>
 </html>
