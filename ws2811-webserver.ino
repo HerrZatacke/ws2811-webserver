@@ -1,24 +1,13 @@
-/*
-    This sketch demonstrates how to set up a simple HTTP-like server.
-    The server will set a GPIO pin depending on the request
-      http://server_ip/gpio/0 will set the GPIO2 low,
-      http://server_ip/gpio/1 will set the GPIO2 high
-    server_ip is the IP address of the ESP8266 module, will be
-    printed to Serial when the module is connected.
-*/
-
+#include "FS.h"
+#include "ArduinoJson.h"
 #include <ESP8266WiFi.h>
 #include <Adafruit_NeoPixel.h>
 
 #define NUMPIXELS 2
 
-#ifndef STASSID
-#define STASSID ""
-#define STAPSK  ""
-#endif
+bool connoctAni = false;
 
-const char* ssid = STASSID;
-const char* password = STAPSK;
+String indexHtml;
 
 Adafruit_NeoPixel pixels(NUMPIXELS, D8, NEO_RGB + NEO_KHZ800);
 
@@ -30,7 +19,36 @@ void setup() {
   Serial.begin(115200);
   pixels.begin();
 
-  // prepare LED
+  StaticJsonDocument<256> conf;
+  SPIFFS.begin();
+  
+  File f = SPIFFS.open( "/conf.json", "r"); // Datei zum lesen öffnen
+  while (!f) {
+    Serial.println("opening conf.json failed");
+    pixels.setPixelColor(0, connoctAni ? 0xff0000 : 0);
+    pixels.setPixelColor(1, connoctAni ? 0 : 0xff0000);
+    pixels.show();
+    delay(250);
+    connoctAni = !connoctAni;
+  }
+
+  deserializeJson(conf, f.readString());
+  f.close();
+
+  const char* ssid = conf["STASSID"];
+  const char* password = conf["STAPSK"];
+
+  f = SPIFFS.open( "/index.html", "r"); // Datei zum lesen öffnen
+  while (!f) {
+    Serial.println("opening index.html failed");
+    pixels.setPixelColor(0, connoctAni ? 0x990099 : 0);
+    pixels.setPixelColor(1, connoctAni ? 0 : 0x990099);
+    pixels.show();
+    delay(250);
+    connoctAni = !connoctAni;
+  }
+
+  indexHtml = f.readString();
 
   // Connect to WiFi network
   Serial.println();
@@ -40,15 +58,12 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-
-  bool connoctAni = false;
   
   while (WiFi.status() != WL_CONNECTED) {
     delay(250);
     Serial.print(F("."));
-    
-    pixels.setPixelColor(0, connoctAni ? 0xff0000 : 0);
-    pixels.setPixelColor(1, connoctAni ? 0 : 0xff0000);
+    pixels.setPixelColor(0, connoctAni ? 0x00ff00 : 0);
+    pixels.setPixelColor(1, connoctAni ? 0 : 0x00ff00);
     pixels.show();
     connoctAni = !connoctAni;
   }
@@ -86,34 +101,7 @@ void loop() {
 
   if (req.indexOf(F("GET / ")) == 0) {
     client.print(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"));
-    client.print(F(
-"<!doctype html>\n"
-"<html>\n"
-"<body>\n"
-"<input type='color' name='color0'/>\n"
-"<input type='color' name='color1'/>\n"
-"<style>input{width: 100%;height: 30vh;}</style>\n"
-"<script>\n"
-"  const nodes = [...document.querySelectorAll('input')];\n"
-"  const query = (name, value='') => {\n"
-"    fetch(`/${name}/${value.substr(1)}`)\n"
-"      .then(res=>res.json())\n"
-"      .then(data => {\n"
-"        data.colors.forEach((color, index) => {\n"
-"          nodes[index].value = '#' + ('000000' + color.toString(16)).substr(-6);\n"
-"        });\n"
-"      });\n"
-"  };\n"
-"  nodes.forEach(node => {\n"
-"    node.addEventListener('change', ({target}) => {\n"
-"      query(target.name, target.value);\n"
-"    });\n"
-"  });\n"
-"  query('initial');\n"
-"</script>\n"
-"</body>\n"
-"</html>\n"
-    ));
+    client.print(indexHtml);
     return;
   }
 
