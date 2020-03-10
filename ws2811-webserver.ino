@@ -7,8 +7,6 @@
 
 bool connoctAni = false;
 
-String indexHtml;
-
 Adafruit_NeoPixel pixels(NUMPIXELS, D8, NEO_RGB + NEO_KHZ800);
 
 // Create an instance of the server
@@ -37,18 +35,6 @@ void setup() {
 
   const char* ssid = conf["STASSID"];
   const char* password = conf["STAPSK"];
-
-  f = SPIFFS.open( "/index.html", "r"); // Datei zum lesen öffnen
-  while (!f) {
-    Serial.println("opening index.html failed");
-    pixels.setPixelColor(0, connoctAni ? 0x990099 : 0);
-    pixels.setPixelColor(1, connoctAni ? 0 : 0x990099);
-    pixels.show();
-    delay(250);
-    connoctAni = !connoctAni;
-  }
-
-  indexHtml = f.readString();
 
   // Connect to WiFi network
   Serial.println();
@@ -101,7 +87,7 @@ void loop() {
 
   if (req.indexOf(F("GET / ")) == 0) {
     client.print(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"));
-    client.print(indexHtml);
+    sendFileContent(client, "index.html");
     return;
   }
 
@@ -121,6 +107,16 @@ void loop() {
   }
   pixels.show();
   
+}
+
+void sendFileContent(WiFiClient client, String filename) {
+  File f = SPIFFS.open("/" + filename, "r");
+  if (!f) {
+    client.print(filename);
+    client.print(F(" not found"));
+    return;
+  }
+  client.print(f.readString());
 }
 
 long storeColor(String query, byte index) {
