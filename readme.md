@@ -11,3 +11,16 @@ A confg.json must be added inside the `data`-folder with the following content:
   "STAPSK":"my-password"
 }
 ```
+
+## measured power consumption
+
+| State          |  Usage |
+| -------------- | ------:|
+| Just Step Up   |  144μA |
+| Connocting     |  190mA |
+| Idle           |  160mA |
+| One RGB-LED on |  290mA |
+| Two RGB-LED on |  550mA |
+| Sleep mode     | *13mA* |
+
+To optimize power consumption [unsolder some chips](https://itooktheredpill.irgendwo.org/2017/reducing-nodemcu-power-consumption/)
