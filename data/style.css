@@ -1,0 +1,9 @@
+input {
+  width: 100%;
+  height: 30vh;
+  border: none;
+}
+* {
+  margin: 0; 
+  padding: 0;
+}

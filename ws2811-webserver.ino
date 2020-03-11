@@ -81,13 +81,11 @@ void loop() {
 
   // Read the first line of the request
   req = client.readStringUntil('\r');
-
-  if (req.indexOf(F("favicon")) != -1) { return; }
   Serial.println(req);
 
-  if (req.indexOf(F("GET / ")) == 0) {
-    client.print(F("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"));
-    sendFileContent(client, "index.html");
+  if ((req.indexOf(F("GET /")) == 0) && (req.indexOf(F("GET /color")) == -1)) {
+    //sendFileContent(client, "index.html");
+    sendFileContent(client, req.substring(4, req.indexOf(" ", 5)));
     return;
   }
 
@@ -110,13 +108,44 @@ void loop() {
 }
 
 void sendFileContent(WiFiClient client, String filename) {
-  File f = SPIFFS.open("/" + filename, "r");
+  if (filename == "/") {
+    filename = F("/index.html");
+  }
+  File f = SPIFFS.open(filename, "r");
   if (!f) {
+    client.print(F("HTTP/1.1 404 REKT\r\nContent-Type: text/plain\r\n\r\n"));
     client.print(filename);
     client.print(F(" not found"));
     return;
   }
+  String extension = filename.substring(filename.indexOf(".") + 1);
+  client.print(F("HTTP/1.1 200 OK\r\n"));
+  client.print(F("Content-Type: "));
+  client.print(getMimeType(extension));
+  client.print(F("\r\n"));
+  client.print(F("\r\n"));
   client.print(f.readString());
+}
+
+String getMimeType(String extension) {
+  // ToDo...
+  // if (extension == F("ico")) {
+  //   return F("image/x-icon");
+  // }
+  
+  if (extension == F("html") || extension == F("htm")) {
+    return F("text/html");
+  }
+  
+  if (extension == F("css")) {
+    return F("text/css");
+  }
+  
+  if (extension == F("js")) {
+    return F("text/javascript");
+  }
+  
+  return F("application/octet-stream");
 }
 
 long storeColor(String query, byte index) {
