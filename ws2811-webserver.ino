@@ -20,8 +20,8 @@ void setup() {
   StaticJsonDocument<256> conf;
   SPIFFS.begin();
   
-  File f = SPIFFS.open( "/conf.json", "r"); // Datei zum lesen öffnen
-  while (!f) {
+  File confFile = SPIFFS.open( "/conf.json", "r"); // Datei zum lesen öffnen
+  while (!confFile) {
     Serial.println("opening conf.json failed");
     pixels.setPixelColor(0, connoctAni ? 0xff0000 : 0);
     pixels.setPixelColor(1, connoctAni ? 0 : 0xff0000);
@@ -30,8 +30,8 @@ void setup() {
     connoctAni = !connoctAni;
   }
 
-  deserializeJson(conf, f.readString());
-  f.close();
+  deserializeJson(conf, confFile.readString());
+  confFile.close();
 
   const char* ssid = conf["STASSID"];
   const char* password = conf["STAPSK"];
@@ -111,8 +111,15 @@ void sendFileContent(WiFiClient client, String filename) {
   if (filename == "/") {
     filename = F("/index.html");
   }
-  File f = SPIFFS.open(filename, "r");
-  if (!f) {
+
+  File serveFile;
+
+  // do not deliver conf.json
+  if (filename != F("/conf.json")) {
+    serveFile = SPIFFS.open(filename, "r");  
+  }
+
+  if (!serveFile) {
     client.print(F("HTTP/1.1 404 REKT\r\nContent-Type: text/plain\r\n\r\n"));
     client.print(filename);
     client.print(F(" not found"));
@@ -124,7 +131,8 @@ void sendFileContent(WiFiClient client, String filename) {
   client.print(getMimeType(extension));
   client.print(F("\r\n"));
   client.print(F("\r\n"));
-  client.print(f.readString());
+  client.print(serveFile.readString());
+  serveFile.close();
 }
 
 String getMimeType(String extension) {
