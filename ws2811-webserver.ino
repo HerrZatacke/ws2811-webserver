@@ -38,7 +38,6 @@ void setup() {
 
   // Connect to WiFi network
   Serial.println();
-  Serial.println();
   Serial.print(F("Connecting to "));
   Serial.println(ssid);
 
@@ -83,6 +82,21 @@ void loop() {
   req = client.readStringUntil('\r');
   Serial.println(req);
 
+  if (req.indexOf(F("GET /sleep")) == 0) {
+    client.print(F("HTTP/1.1 200 OK\r\n\r\nNightynight"));
+    client.flush();
+    pixels.setPixelColor(0, 0x000044);
+    pixels.setPixelColor(1, 0x000044);
+    pixels.show();
+    delay(1250);
+    pixels.setPixelColor(0, 0);
+    pixels.setPixelColor(1, 0);
+    pixels.show();
+    Serial.println("deep sleep for 15 seconds");
+    ESP.deepSleep(15e6);
+    return;
+  }
+  
   if ((req.indexOf(F("GET /")) == 0) && (req.indexOf(F("GET /color")) == -1)) {
     //sendFileContent(client, "index.html");
     sendFileContent(client, req.substring(4, req.indexOf(" ", 5)));
