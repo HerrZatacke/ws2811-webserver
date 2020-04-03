@@ -1,33 +1,31 @@
-let nodes = null;
-
 const toColor = number => ('#' + ('000000' + number.toString(16)).substr(-6));
+const fnCatch = () => ({ colors: [0x0000ff, 0x00ff00, 0xff0000]});
 
-const query = (name, value='') => {
-  return fetch(`/${name}/${value.substr(1)}`)
-    .then(res=>res.json())
-    .then(data => {
-      if (nodes) {
-        data.colors.forEach((color, index) => {
-          nodes[index].value = toColor(color);
-        });
-      } else {
-        return data.colors;
-      }
-    });    
-};
-
-query('colors')
-  .then(colors => {
+fetch('/colors/')
+  .then(res=>res.json())
+  .catch(fnCatch)
+  .then(({ colors }) => {
     const body = document.querySelector('body');
-    nodes = colors.map((color, index) => {
+    nodes = colors.map((color, colorIndex) => {
       const node = document.createElement('input');
-      node.type = 'color';
-      node.name = `color${index}`;
-      node.value = toColor(color);
-      node.addEventListener('change', ({target}) => {
-        query(target.name, target.value);
-      });          
       body.appendChild(node);
+
+      $(node)
+        .spectrum({
+          type: 'flat',
+          showPalette: false,
+          togglePaletteOnly: true,
+          hideAfterPaletteSelect: true,
+          showAlpha: false,
+          showButtons: false,
+          allowEmpty: false,
+          color: toColor(color),
+          move: throttle(100, false, (color) => {
+            fetch(`/color${colorIndex}/${color.toHex()}`)
+              .then(res=>res.json())
+              .catch(fnCatch)
+          })
+        });
       return node;
     });
   });

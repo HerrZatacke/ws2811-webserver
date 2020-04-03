@@ -1,9 +1,18 @@
-input {
-  width: 100%;
-  height: 30vh;
-  border: none;
-}
 * {
-  margin: 0; 
+  margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+body {
+  position: relative;
+  padding-bottom: 20px;
+  height: 100vh;
+}
+a {
+  font-family: sans-serif;
+  color: #aaa;
+  font-size: 11px;
+  text-align: center;
+  position: absolute;
+  bottom: 5px;
 }
