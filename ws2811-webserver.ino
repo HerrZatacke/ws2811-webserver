@@ -3,11 +3,11 @@
 #include <ESP8266WiFi.h>
 #include <Adafruit_NeoPixel.h>
 
-#define NUMPIXELS 2
+#define NUMPIXELS 16
 
 bool connoctAni = false;
 
-Adafruit_NeoPixel pixels(NUMPIXELS, D8, NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel pixels(NUMPIXELS, D8, NEO_GRB + NEO_KHZ800);
 
 // Create an instance of the server
 // specify the port to listen on as an argument
@@ -69,7 +69,7 @@ void setup() {
 }
 
 String req;
-uint32_t colors[2];
+uint32_t colors[NUMPIXELS];
 
 void loop() {
   // Check if a client has connected
@@ -103,15 +103,21 @@ void loop() {
     return;
   }
 
-  storeColor(F("/color0/"), 0);
-  storeColor(F("/color1/"), 1);
+  for(int i=0; i < NUMPIXELS; i++) {
+    storeColor(i);
+  }
 
   while (client.available()) { client.read(); }
   
   client.print(F("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"colors\":["));
-  client.print(colors[0]);
-  client.print(F(","));
-  client.print(colors[1]);
+
+  for(int i=0; i < NUMPIXELS; i++) {
+    if (i > 0) {
+      client.print(F(","));
+    }
+    client.print(colors[i]);
+  }
+  
   client.print(F("]}"));
 
   for(int i=0; i < NUMPIXELS; i++) {
@@ -154,24 +160,29 @@ String getMimeType(String extension) {
   // if (extension == F("ico")) {
   //   return F("image/x-icon");
   // }
-  
+
   if (extension == F("html") || extension == F("htm")) {
     return F("text/html");
   }
-  
+
   if (extension == F("css")) {
     return F("text/css");
   }
-  
+
   if (extension == F("js")) {
     return F("text/javascript");
   }
-  
+
   return F("application/octet-stream");
 }
 
-long storeColor(String query, byte index) {
+long storeColor(byte index) {
+
+  String route = F("/color");
+  String query = route + index + '/';
+  
   int offset = req.indexOf(query);
+  
   if (offset != -1) {
     String colorRaw = req.substring(offset + query.length(), offset + query.length() + 6);
     char cBuf[7] = "000000";
