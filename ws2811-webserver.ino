@@ -182,6 +182,11 @@ long storeColor(byte index) {
   String query = route + index + '/';
   
   int offset = req.indexOf(query);
+
+  if (offset == -1) {
+    query = F("/colorAll/");
+    offset = req.indexOf(query);
+  }
   
   if (offset != -1) {
     String colorRaw = req.substring(offset + query.length(), offset + query.length() + 6);
