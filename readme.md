@@ -12,6 +12,11 @@ A confg.json must be added inside the `data`-folder with the following content:
 }
 ```
 
+## Images
+![Example Setup](example.jpg "Example Setup - usb connection is just for power")
+![Example UI](web-interface.png "Example Web Interface for 16 LEDs")
+
+
 ## measured power consumption
 
 | State          |  Usage |
