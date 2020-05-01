@@ -1,4 +1,4 @@
-# ESP8266 based webserver to change color of two ws2811 LEDs
+# ESP8266 based webserver to change color of ws2811 LEDs
 
 ## chip
 My [azdelivery chip](https://www.amazon.de/gp/product/B0754N794H) is to be configured in the Arduino IDE as LoLin(Wemos) D1 R2 & mini
